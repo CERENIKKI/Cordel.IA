@@ -79,6 +79,7 @@ def chat_with_togetherai(prompt):
         return "Error al hablar con la IA."
 
 
-# ✅ Corrected main block (ONLY ONCE)
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=8080, allow_unsafe_werkzeug=True)
+    import eventlet
+    import eventlet.wsgi
+    socketio.run(app, host="0.0.0.0", port=8080)
