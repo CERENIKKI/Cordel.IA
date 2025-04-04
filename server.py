@@ -1,15 +1,17 @@
+# ✅ MUST be at the very top of the file
 import eventlet
-eventlet.monkey_patch()
+eventlet.monkey_patch()  # Important!
 
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import requests
 
-
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+
+# ✅ Force async mode to eventlet
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 # Personajes guardados en memoria
 characters = {}
@@ -84,6 +86,5 @@ def chat_with_togetherai(prompt):
 
 
 if __name__ == "__main__":
-    import eventlet
-    import eventlet.wsgi
     socketio.run(app, host="0.0.0.0", port=8080)
+
