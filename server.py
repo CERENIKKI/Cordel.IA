@@ -5,7 +5,7 @@ import requests
 
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio.run(app, host="0.0.0.0", port=8080, allow_unsafe_werkzeug=True)
 
 # Personajes guardados en memoria
 characters = {}
