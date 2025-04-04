@@ -5,7 +5,7 @@ import requests
 
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")  # Correct place to initialize!
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Personajes guardados en memoria
 characters = {}
@@ -76,13 +76,9 @@ def chat_with_togetherai(prompt):
     if res.status_code == 200:
         return res.json()["choices"][0]["message"]["content"]
     else:
-        return "Error en la API de Together.ai."
-
-# 👇 Only run the server when this file is executed directly
-if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=8080, allow_unsafe_werkzeug=True)
-
         return "Error al hablar con la IA."
 
+
+# ✅ Corrected main block (ONLY ONCE)
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=8080)
+    socketio.run(app, host="0.0.0.0", port=8080, allow_unsafe_werkzeug=True)
