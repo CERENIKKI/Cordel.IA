@@ -1,16 +1,15 @@
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
-from flask_cors import CORS  # Añadir esta línea
+from flask_cors import CORS
 import os
 import json
 import uuid
 
 app = Flask(__name__)
-CORS(app)  # Esto habilita CORS para todas las rutas
 
-# El resto de tu código sigue igual
+# Habilitás CORS para cualquier origen (podés cambiar "*" por tu dominio si querés más seguridad)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
-app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploads'
 DATA_FOLDER = 'data'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -34,11 +33,12 @@ def upload_character():
         img_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{unique_id}_{filename}")
         image.save(img_path)
 
+        # Guardás solo el path relativo
         char_data = {
             'name': name,
             'personality': personality,
             'universe': universe,
-            'image': img_path
+            'image': f"/static/uploads/{unique_id}_{filename}"
         }
 
         with open(f"{DATA_FOLDER}/{unique_id}.json", "w") as f:
@@ -61,4 +61,3 @@ def get_character(char_id):
 @app.route('/static/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-    
