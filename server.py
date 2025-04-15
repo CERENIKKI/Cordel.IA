@@ -1,9 +1,14 @@
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
+from flask_cors import CORS  # Añadir esta línea
 import os
 import json
 import uuid
-import threading
+
+app = Flask(__name__)
+CORS(app)  # Esto habilita CORS para todas las rutas
+
+# El resto de tu código sigue igual
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploads'
