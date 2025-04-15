@@ -1,90 +1,59 @@
-# ✅ MUST be at the very top of the file
-import eventlet
-eventlet.monkey_patch()  # Important!
-
-from flask import Flask, request, jsonify
-from flask_socketio import SocketIO, emit
-from flask_cors import CORS
-import requests
+from flask import Flask, request, jsonify, send_from_directory
+from werkzeug.utils import secure_filename
+import os
+import json
+import uuid
+import threading
 
 app = Flask(__name__)
-CORS(app)
+UPLOAD_FOLDER = 'static/uploads'
+DATA_FOLDER = 'data'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(DATA_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# ✅ Force async mode to eventlet
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+@app.route('/')
+def index():
+    return '¡Servidor andando en Render!'
 
-# Personajes guardados en memoria
-characters = {}
-API_KEY = "30824df935cb1676a430c3ef49a4379672d9e42a15548d5823d4451ccd0f1d0b"  # reemplazalo con tu key real
+@app.route('/upload', methods=['POST'])
+def upload_character():
+    try:
+        image = request.files['image']
+        personality = request.form['personality']
+        name = request.form['name']
+        universe = request.form.get('universe', 'default')
 
-@app.route("/create_character/", methods=["POST"])
-def create_character():
-    name = request.json["name"]
-    personality = request.json["personality"]
-    universe = request.json.get("universe", "")
-    image_url = request.json["image_url"]
+        filename = secure_filename(image.filename)
+        unique_id = str(uuid.uuid4())
+        img_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{unique_id}_{filename}")
+        image.save(img_path)
 
-    characters[name] = {
-        "name": name,
-        "personality": personality,
-        "universe": universe,
-        "image_url": image_url
-    }
+        char_data = {
+            'name': name,
+            'personality': personality,
+            'universe': universe,
+            'image': img_path
+        }
 
-    return jsonify({"status": "ok", "character": characters[name]})
+        with open(f"{DATA_FOLDER}/{unique_id}.json", "w") as f:
+            json.dump(char_data, f)
 
+        return jsonify({'status': 'ok', 'id': unique_id})
 
-@socketio.on("connect")
-def on_connect():
-    print("Cliente conectado")
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
 
+@app.route('/character/<char_id>')
+def get_character(char_id):
+    try:
+        with open(f"{DATA_FOLDER}/{char_id}.json") as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
 
-@socketio.on("disconnect")
-def on_disconnect():
-    print("Cliente desconectado")
-
-
-@socketio.on("message")
-def handle_message(data):
-    char_name = data.get("character")
-    user_msg = data.get("message")
-    char = characters.get(char_name)
-
-    if not char:
-        emit("response", "Personaje no encontrado.")
-        return
-
-    prompt = f"""
-    Universo: {char['universe']}
-    Personaje: {char_name}
-    Personalidad: {char['personality']}
-    Usuario dice: {user_msg}
-    {char_name} responde como si fuera real:
-    """
-
-    response = chat_with_togetherai(prompt)
-    emit("response", response)
-
-
-def chat_with_togetherai(prompt):
-    url = "https://api.together.xyz/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {API_KEY}"}
-    json_data = {
-        "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
-        "messages": [
-            {"role": "system", "content": "Respondé como el personaje, de forma natural."},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.8,
-    }
-
-    res = requests.post(url, headers=headers, json=json_data)
-    if res.status_code == 200:
-        return res.json()["choices"][0]["message"]["content"]
-    else:
-        return "Error al hablar con la IA."
-
-
-if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=8080)
-
+@app.route('/static/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    
