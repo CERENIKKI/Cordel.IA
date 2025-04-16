@@ -18,7 +18,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def index():
     return render_template('index.html')  # Renderiza tu HTML
 
-@app.route('/upload', methods=['POST'])
+@app.route('static/uploads', methods=['POST'])
 def upload_character():
     try:
         image = request.files['image']
@@ -35,7 +35,7 @@ def upload_character():
             'name': name,
             'personality': personality,
             'universe': universe,
-            'image': f"/static/uploads/{unique_id}_{filename}"
+            'image': f"static/uploads/{unique_id}_{filename}"
         }
 
         with open(f"{DATA_FOLDER}/{unique_id}.json", "w") as f:
@@ -56,6 +56,6 @@ def get_character(char_id):
         return jsonify({'status': 'error', 'message': str(e)})
 
 
-@app.route('/static/uploads/<filename>')
+@app.route('static/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
