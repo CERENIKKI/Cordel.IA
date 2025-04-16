@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import os
@@ -6,9 +6,7 @@ import json
 import uuid
 
 app = Flask(__name__)
-
-# Habilitás CORS para cualquier origen (podés cambiar "*" por tu dominio si querés más seguridad)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)
 
 UPLOAD_FOLDER = 'static/uploads'
 DATA_FOLDER = 'data'
@@ -18,7 +16,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/')
 def index():
-    return '¡Servidor andando en Render!'
+    return render_template('index.html')  # Renderiza tu HTML
 
 @app.route('/upload', methods=['POST'])
 def upload_character():
@@ -33,7 +31,6 @@ def upload_character():
         img_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{unique_id}_{filename}")
         image.save(img_path)
 
-        # Guardás solo el path relativo
         char_data = {
             'name': name,
             'personality': personality,
@@ -57,6 +54,7 @@ def get_character(char_id):
         return jsonify(data)
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
+
 
 @app.route('/static/uploads/<filename>')
 def uploaded_file(filename):
