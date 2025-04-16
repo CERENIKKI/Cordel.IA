@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Crear y Mostrar Personajes</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 0;
+			background-color: #f4f4f9;
+		}
+		.container {
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 20px;
+			text-align: center;
+		}
+		.form-container, .character-container {
+			background-color: white;
+			border-radius: 10px;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+			padding: 20px;
+			margin: 20px 0;
+		}
+		img {
+			max-width: 100%;
+			border-radius: 8px;
+		}
+		.button {
+			background-color: #4CAF50;
+			color: white;
+			padding: 10px 20px;
+			text-align: center;
+			text-decoration: none;
+			border-radius: 5px;
+			display: inline-block;
+			cursor: pointer;
+		}
+		input[type="text"], input[type="file"], textarea {
+			width: 100%;
+			padding: 10px;
+			margin: 10px 0;
+			border-radius: 5px;
+			border: 1px solid #ddd;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>Crear y Mostrar Personajes</h1>
+
+		<!-- Formulario para crear un personaje -->
+		<div class="form-container">
+			<h2>Crea un Nuevo Personaje</h2>
+			<form id="createCharacterForm" enctype="multipart/form-data">
+				<input type="text" id="name" placeholder="Nombre del personaje" required />
+				<textarea id="personality" placeholder="Personalidad del personaje" required></textarea>
+				<input type="text" id="universe" placeholder="Universo del personaje" />
+				<input type="file" id="image" accept="image/*" required />
+				<button class="button" type="submit">Crear Personaje</button>
+			</form>
+		</div>
+
+		<!-- Campo para ingresar el ID de un personaje ya creado -->
+		<div class="character-container">
+			<h2>Mostrar Personaje</h2>
+			<input type="text" id="charId" placeholder="Introduce el ID del personaje" />
+			<button class="button" onclick="fetchCharacter()">Cargar Personaje</button>
+
+			<div id="characterInfo"></div>
+		</div>
+	</div>
+
+	<script>
+		async function createCharacter(event) {
+			event.preventDefault(); // Evita recargar
+
+			const formData = new FormData(document.getElementById('createCharacterForm'));
+
+			try {
+				const response = await fetch('https://cordel-ia.onrender.com/upload', {
+					method: 'POST',
+					body: formData
+				});
+
+				const data = await response.json();
+
+				if (data.status === 'ok') {
+					alert('Personaje creado con éxito. ID: ' + data.id);
+				} else {
+					alert('Error al crear el personaje: ' + data.message);
+				}
+			} catch (error) {
+				console.error("Error en la solicitud:", error);
+				alert('Error de conexión: ' + error.message);
+			}
+		}
+
+		document.getElementById('createCharacterForm').addEventListener('submit', createCharacter);
+
+		async function fetchCharacter() {
+			const charId = document.getElementById('charId').value.trim();
+			if (!charId) {
+				alert('Por favor, ingresa un ID.');
+				return;
+			}
+
+			try {
+				const response = await fetch(`https://cordel-ia.onrender.com/character/${charId}`);
+				const data = await response.json();
+
+				if (data.status === 'ok') {
+					const char = data.character;
+					document.getElementById('characterInfo').innerHTML = `
+						<h3>${char.name}</h3>
+						<p><strong>Personalidad:</strong> ${char.personality}</p>
+						<p><strong>Universo:</strong> ${char.universe}</p>
+						<img src="https://cordel-ia.onrender.com/image/${char.image_filename}" alt="${char.name}" />
+					`;
+				} else {
+					document.getElementById('characterInfo').innerHTML = '<p>No se encontró el personaje.</p>';
+				}
+			} catch (error) {
+				console.error("Error al buscar personaje:", error);
+				alert('Error al buscar personaje: ' + error.message);
+			}
+		}
+	</script>
+</body>
+</html>
