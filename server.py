@@ -8,7 +8,7 @@ import uuid
 app = Flask(__name__)
 CORS(app)
 
-UPLOAD_FOLDER = '/static/uploads/'
+UPLOAD_FOLDER = './static/uploads/'
 DATA_FOLDER = 'data'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DATA_FOLDER, exist_ok=True)
@@ -18,7 +18,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def index():
     return render_template('index.html')  # Renderiza tu HTML
 
-@app.route('static/uploads', methods=['POST'])
+@app.route('.static/uploads', methods=['POST'])
 def upload_character():
     try:
         image = request.files['image']
@@ -56,6 +56,6 @@ def get_character(char_id):
         return jsonify({'status': 'error', 'message': str(e)})
 
 
-@app.route('/static/uploads/<filename>')
+@app.route('./static/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
